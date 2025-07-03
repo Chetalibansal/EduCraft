@@ -14,7 +14,7 @@ const generateToken = (res, user, message) => {
       maxAge: 24 * 60 * 60 * 1000,
     })
     .json(
-        new ApiResponse(200, user, "Token Generated successfully")
+        new ApiResponse(200, user, message)
     )
 };
 

@@ -14,11 +14,14 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState,useEffect } from "react";
 import {
+  useLoadUserQuery,
   useLoginUserMutation,
   useRegisterUserMutation,
 } from "@/features/api/authApi";
 import {toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { userLoggedIn } from "@/features/authSlice";
 
 const Login = () => {
   const [loginInput, setLoginInput] = useState({ email: "", password: "" });
@@ -27,6 +30,7 @@ const Login = () => {
     email: "",
     password: "",
   });
+
 
   const [
     registerUser,
@@ -63,20 +67,26 @@ const Login = () => {
     const action = type === "signup" ? registerUser : loginUser;
     await action(inputData);
   };
+
+  const dispatch = useDispatch()
+  const {refetch} = useLoadUserQuery();
   
   useEffect(() => {
    if(registerIsSuccess && registerData){
     toast.success(registerData.message || "Signup Successful")
+    navigate("/")
    }
    if(registerError){
-    toast.error(registerData?.data?.message || "signup Failed")
+    toast.error(registerError?.data?.message || "signup Failed")
    }
    if(loginIsSuccess && loginData){
     toast.success(loginData.message || "Login Successful")
+    dispatch(userLoggedIn({ user: loginData.user }));
+    refetch()
     navigate("/")
    }
    if(loginError){
-    toast.error(loginData?.data?.message || "Login Failed")
+    toast.error(loginError?.data?.message || "Login Failed")
    }
   }, [loginIsLoading, registerIsLoading, loginData, registerData, loginError, registerError])
   

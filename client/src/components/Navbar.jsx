@@ -8,7 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "../components/ui/dropdown-menu";
 import { Menu, School } from "lucide-react";
-import React from "react";
+import React, { useEffect } from "react";
 import { Button } from "./ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import DarkMode from "./DarkMode";
@@ -21,11 +21,28 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "../components/ui/sheet";
-import { Separator } from "@radix-ui/react-dropdown-menu";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import {useLogoutUserMutation } from "@/features/api/authApi";
+import { toast } from "sonner";
+import { useSelector } from "react-redux";
 
 const Navbar = () => {
-  const user = true;
+  const { user,isAuthenticated } = useSelector((store) => store.auth);
+  const [logoutUser, { data, isSuccess }] = useLogoutUserMutation();
+  
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (isSuccess) {
+      toast.success(data.message || "User Logged out");
+      navigate("/login");
+    }
+  }, [isSuccess, ]);
+  const logoutHandler = async () => {
+    await logoutUser();
+  };
+  console.log(user?.data);
+
   return (
     <div className="h-16 dark:bg-[#0A0A0A] bg-white border-b dark:border-b-gray-800 border-b-gray-200 fixed top-0 left-0 right-0 duration-300 z-10 ">
       {/* Desktop */}
@@ -38,12 +55,14 @@ const Navbar = () => {
 
         {/* User Icon */}
         <div className="flex items-center gap-5">
-          {user ? (
+          {user&&isAuthenticated ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Avatar>
                   <AvatarImage
-                    src="https://github.com/shadcn.png"
+                    src={
+                      user?.data.photoUrl || "https://github.com/shadcn.png"
+                    }
                     alt="@avatar"
                   />
                   <AvatarFallback>CN</AvatarFallback>
@@ -53,18 +72,31 @@ const Navbar = () => {
                 <DropdownMenuLabel>My Account</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
-                  <DropdownMenuItem><Link to="my-learning">My Learning</Link> </DropdownMenuItem>
-                  <DropdownMenuItem><Link to="profile">Edit Profile</Link></DropdownMenuItem>
-                  <DropdownMenuItem>Log Out</DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <Link to="my-learning">My Learning</Link>{" "}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <Link to="profile">Edit Profile</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={logoutHandler}>
+                    Log Out
+                  </DropdownMenuItem>
                 </DropdownMenuGroup>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>Dashboard</DropdownMenuItem>
+                {
+                  (user.role == "instructor" && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem>Dashboard</DropdownMenuItem>
+                    </>
+                  ))
+                }
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
             <div className="flex items-center gap-2">
-              <Button variant="outline">Login</Button>
-              <Button>Signup</Button>
+              
+                <Button variant="outline" onClick={()=> navigate("/login")}>Login</Button>
+                <Button onClick={()=>navigate("/login")}>Signup</Button>
             </div>
           )}
           <DarkMode />
@@ -84,6 +116,19 @@ export default Navbar;
 
 const MobileNavbar = () => {
   const role = "instructor";
+  const [logoutUser, { data, isSuccess }] = useLogoutUserMutation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (isSuccess) {
+      toast.success(data.message || "User Logged out");
+      navigate("/login");
+    }
+  }, [isSuccess]);
+
+  const logoutHandler = async () => {
+    await logoutUser();
+  };
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -103,9 +148,13 @@ const MobileNavbar = () => {
           </div>
         </SheetHeader>
         <nav className="flex flex-col space-y-4 font-medium">
-          <span><Link to={"my-learning"}>My Learning</Link></span>
-          <span><Link to={"profile"}>Edit Profile</Link></span>
-          <span>Log out</span>
+          <span>
+            <Link to={"my-learning"}>My Learning</Link>
+          </span>
+          <span>
+            <Link to={"profile"}>Edit Profile</Link>
+          </span>
+          <span onClick={logoutHandler}>Log out</span>
         </nav>
         {role === "instructor" && (
           <SheetFooter className="mt-2">
