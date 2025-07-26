@@ -8,6 +8,11 @@ import { RouterProvider } from 'react-router'
 import Courses from './pages/student/Courses'
 import MyLearning from './pages/student/MyLearning'
 import Profile from './pages/student/Profile'
+import Sidebar from './pages/admin/Sidebar'
+import Dashboard from './pages/admin/Dashboard'
+import AddCourse from './pages/admin/course/AddCourse'
+import CourseTable from './pages/admin/course/CourseTable'
+import EditCourse from './pages/admin/course/EditCourse'
 
 const appRouter=createBrowserRouter([
   {
@@ -34,6 +39,29 @@ const appRouter=createBrowserRouter([
       {
         path: "profile",
         element: <Profile/>
+      },
+      // admin routes start from here
+      {
+        path: "admin",
+        element:<Sidebar/>,
+        children:[
+          {
+            path: "dashboard",
+            element: <Dashboard/>
+          },
+          {
+            path: "course",
+            element: <CourseTable/>,
+          },
+          {
+            path: "course/create",
+            element: <AddCourse/>
+          },
+          {
+            path: "course/:courseId",
+            element: <EditCourse/>
+          }
+        ]
       }
     ]
   }

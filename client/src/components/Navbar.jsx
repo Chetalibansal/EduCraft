@@ -83,12 +83,14 @@ const Navbar = () => {
                   </DropdownMenuItem>
                 </DropdownMenuGroup>
                 {
-                  (user.role == "instructor" && (
+                  (user?.data.role === "instructor" ? (
                     <>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem>Dashboard</DropdownMenuItem>
-                    </>
-                  ))
+                      <DropdownMenuItem>
+                        <Link to="admin">Dashboard</Link>
+                        </DropdownMenuItem>
+                    </> 
+                  ) : null )
                 }
               </DropdownMenuContent>
             </DropdownMenu>
@@ -159,7 +161,9 @@ const MobileNavbar = () => {
         {role === "instructor" && (
           <SheetFooter className="mt-2">
             <SheetClose asChild>
-              <Button type="submit">DashBoard</Button>
+              <Button type="submit">
+               <Link to="admin">DashBoard</Link> 
+                </Button>
             </SheetClose>
           </SheetFooter>
         )}
