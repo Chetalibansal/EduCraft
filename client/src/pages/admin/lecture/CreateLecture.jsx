@@ -1,14 +1,51 @@
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import React from 'react'
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  useCreateLectureMutation,
+  useGetCourseLectureQuery,
+} from "@/features/api/courseApi";
+import { Loader2 } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { toast } from "sonner";
+import Lecture from "./Lecture";
 
 const CreateLecture = () => {
+  const [lectureTitle, setLectureTitle] = useState("");
+  const navigate = useNavigate();
+  const params = useParams();
+  const courseId = params.courseId;
+
+  const [createLecture, { data, isLoading, isSuccess, error }] =
+    useCreateLectureMutation();
+
+  const {
+    data: lectureData,
+    isLoading: lectureLoading,
+    isError: lectureError,
+    refetch
+  } = useGetCourseLectureQuery(courseId);
+
+  const createLectureHandler = async () => {
+    await createLecture({ lectureTitle, courseId });
+    setLectureTitle("");
+  };
+
+  useEffect(() => {
+    if (isSuccess) {
+      refetch();
+      toast.success(data?.message || "Lecture created successfully");
+    }
+    if (error) {
+      toast.error(error?.data?.message);
+    }
+  }, [isSuccess, error]);
+
   return (
     <div>
       <div>
-        <h1 className="font-bold text-xl">
-        Create New Lecture
-        </h1>
+        <h1 className="font-bold text-xl">Create New Lecture</h1>
         <p className="text-sm">
           Lorem ipsum dolor sit amet consectetur adipisicing elit. Eaque, illo?
         </p>
@@ -18,41 +55,21 @@ const CreateLecture = () => {
           <Label className="my-2">Title</Label>
           <Input
             type="text"
-            name="courseTitle"
-            value={courseTitle}
-            onChange={(e) => setCourseTitle(e.target.value)}
-            placeholder="Your course name"
+            name="lectureTitle"
+            value={lectureTitle}
+            onChange={(e) => setLectureTitle(e.target.value)}
+            placeholder="Your Title name"
           />
         </div>
-        <div className="my-3">
-          <Label className="my-2">Category</Label>
-          <Select onValueChange={getSelectedCategory}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Select a category" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <SelectLabel>Category</SelectLabel>
-                <SelectItem value="nextJS">Next JS</SelectItem>
-                <SelectItem value="dataScience">Data Science</SelectItem>
-                <SelectItem value="frontend">Frontend Development</SelectItem>
-                <SelectItem value="fullStack">Fullstack Development</SelectItem>
-                <SelectItem value="javascript">Javascript</SelectItem>
-                <SelectItem value="reactJS">ReactJS</SelectItem>
-                <SelectItem value="dsa">
-                  Data Structures and Algorithms
-                </SelectItem>
-                <SelectItem value="docker">Docker</SelectItem>
-                <SelectItem value="mern ">MERN Stack</SelectItem>
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-        </div>
+
         <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={() => navigate("/admin/course")}>
+          <Button
+            variant="outline"
+            onClick={() => navigate(`/admin/course/${courseId}`)}
+          >
             Back
           </Button>
-          <Button disabled={isLoading} onClick={createCourseHandler}>
+          <Button disabled={isLoading} onClick={createLectureHandler}>
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -63,9 +80,27 @@ const CreateLecture = () => {
             )}
           </Button>
         </div>
+        <div className="mt-10">
+          {lectureLoading ? (
+            <p>Loading lecture...</p>
+          ) : lectureError ? (
+            <p>Failed to load lectures</p>
+          ) : lectureData?.lectures?.length === 0 ? (
+            <p>No lectures found for this course</p>
+          ) : (
+            lectureData?.lectures?.map((lecture, index) => (
+              <Lecture
+                key={lecture._id}
+                lecture={lecture}
+                courseId={courseId}
+                index={index}
+              />
+            ))
+          )}
+        </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default CreateLecture
+export default CreateLecture;

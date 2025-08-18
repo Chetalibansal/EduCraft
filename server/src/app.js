@@ -1,6 +1,7 @@
 import express from 'express'
 import userRoute from './routes/user.route.js';
 import courseRoute from './routes/course.route.js'
+import mediaRoute from './routes/media.route.js'
 import cookieParser from 'cookie-parser'
 import cors from "cors"
 
@@ -18,5 +19,6 @@ app.use(cors({
 // apis
 app.use("/api/v1/user", userRoute)
 app.use("/api/v1/course", courseRoute)
+app.use("/api/v1/media", mediaRoute)
 
 export {app}

@@ -22,14 +22,14 @@ import {
   SheetTrigger,
 } from "../components/ui/sheet";
 import { Link, useNavigate } from "react-router-dom";
-import {useLogoutUserMutation } from "@/features/api/authApi";
+import { useLogoutUserMutation } from "@/features/api/authApi";
 import { toast } from "sonner";
 import { useSelector } from "react-redux";
 
 const Navbar = () => {
-  const { user,isAuthenticated } = useSelector((store) => store.auth);
+  const { user, isAuthenticated } = useSelector((store) => store.auth);
   const [logoutUser, { data, isSuccess }] = useLogoutUserMutation();
-  
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -37,7 +37,7 @@ const Navbar = () => {
       toast.success(data.message || "User Logged out");
       navigate("/login");
     }
-  }, [isSuccess, ]);
+  }, [isSuccess]);
   const logoutHandler = async () => {
     await logoutUser();
   };
@@ -50,19 +50,21 @@ const Navbar = () => {
         {/* Logo and name */}
         <div className="flex items-center gap-2">
           <School size={30} />
-          <h1 className="hidden md:block font-extrabold text-2xl ">EduCraft</h1>
+          <Link to="/">
+            <h1 className="hidden md:block font-extrabold text-2xl ">
+              EduCraft
+            </h1>
+          </Link>
         </div>
 
         {/* User Icon */}
         <div className="flex items-center gap-5">
-          {user&&isAuthenticated ? (
+          {user && isAuthenticated ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Avatar>
                   <AvatarImage
-                    src={
-                      user?.data.photoUrl || "https://github.com/shadcn.png"
-                    }
+                    src={user?.data.photoUrl || "https://github.com/shadcn.png"}
                     alt="@avatar"
                   />
                   <AvatarFallback>CN</AvatarFallback>
@@ -82,23 +84,22 @@ const Navbar = () => {
                     Log Out
                   </DropdownMenuItem>
                 </DropdownMenuGroup>
-                {
-                  (user?.data.role === "instructor" ? (
-                    <>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem>
-                        <Link to="admin">Dashboard</Link>
-                        </DropdownMenuItem>
-                    </> 
-                  ) : null )
-                }
+                {user?.data.role === "instructor" ? (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem>
+                      <Link to="admin">Dashboard</Link>
+                    </DropdownMenuItem>
+                  </>
+                ) : null}
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
             <div className="flex items-center gap-2">
-              
-                <Button variant="outline" onClick={()=> navigate("/login")}>Login</Button>
-                <Button onClick={()=>navigate("/login")}>Signup</Button>
+              <Button variant="outline" onClick={() => navigate("/login")}>
+                Login
+              </Button>
+              <Button onClick={() => navigate("/login")}>Signup</Button>
             </div>
           )}
           <DarkMode />
@@ -162,8 +163,8 @@ const MobileNavbar = () => {
           <SheetFooter className="mt-2">
             <SheetClose asChild>
               <Button type="submit">
-               <Link to="admin">DashBoard</Link> 
-                </Button>
+                <Link to="admin">DashBoard</Link>
+              </Button>
             </SheetClose>
           </SheetFooter>
         )}

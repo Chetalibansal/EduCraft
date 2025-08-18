@@ -18,7 +18,12 @@ import {
   SelectValue,
   SelectTrigger,
 } from "@/components/ui/select";
-import { useEditCourseMutation, useGetCourseByIdQuery } from "@/features/api/courseApi";
+import {
+  useEditCourseMutation,
+  useGetCourseByIdQuery,
+  usePublishCourseMutation,
+  useRemoveCourseMutation,
+} from "@/features/api/courseApi";
 import { Loader, Loader2 } from "lucide-react";
 import React, { useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -39,13 +44,15 @@ const CourseTab = () => {
   const navigate = useNavigate();
   const params = useParams();
   const courseId = params.courseId;
-  
-  const {data: courseByIdData, isLoading: courseByIdLoading} = useGetCourseByIdQuery(courseId, {refetchOnMountOrArgChange: true});
-  
-  useEffect(()=>{
-    if(courseByIdData?.data)
-    {
-      const course = courseByIdData?.data
+
+  const { data: courseByIdData, isLoading: courseByIdLoading, refetch } =
+    useGetCourseByIdQuery(courseId, { refetchOnMountOrArgChange: true });
+
+  const [publishCourse, {}] = usePublishCourseMutation();
+
+  useEffect(() => {
+    if (courseByIdData?.data) {
+      const course = courseByIdData?.data;
       setInput({
         courseTitle: course.courseTitle || "",
         subTitle: course.subTitle || "",
@@ -54,12 +61,17 @@ const CourseTab = () => {
         courseLevel: course.courseLevel || "",
         coursePrice: course.coursePrice || "",
         courseThumbnail: "",
-      })
+      });
       setPreviewThumbnail(course.courseThumbnail || "");
     }
-  },[courseByIdData])
+  }, [courseByIdData]);
 
-  const [editCourse, {data, isLoading, isSuccess, error}] = useEditCourseMutation();
+  const [editCourse, { data, isLoading, isSuccess, error }] =
+    useEditCourseMutation();
+
+  const [removeCourse, { data: removeData, isLoading: removeLoading, isSuccess: removeSuccess, error: removeError }] =
+    useRemoveCourseMutation();
+
 
   const changeEventHandler = (e) => {
     const { name, value } = e.target;
@@ -86,7 +98,7 @@ const CourseTab = () => {
     }
   };
 
-  const updateCourseHandler = async() => {
+  const updateCourseHandler = async () => {
     const formData = new FormData();
     formData.append("courseTitle", input.courseTitle);
     formData.append("subTitle", input.subTitle);
@@ -97,22 +109,54 @@ const CourseTab = () => {
     if (input.courseThumbnail) {
       formData.append("courseThumbnail", input.courseThumbnail);
     }
-    await editCourse({formData, courseId})
+    await editCourse({ formData, courseId });
     navigate("/admin/course");
+  };
+
+  const publishStatusHandler = async (action) => {
+    const response = await publishCourse({ courseId, query: action });
+    if (response.data) {
+      refetch()
+      toast.success(response.data.message || "Course published or unpublished successfully");
+    }
+    if (response.error) {
+      toast.error(
+        response.error.data?.message || "Failed to publish or unpublish course"
+      );
+    }
+  };
+
+  const removeCourseHandler = async() => {
+    const course = courseByIdData?.data;
+    if (
+      window.confirm(
+        `Permanently delete “${course.courseTitle}”?\n` +
+        "All lectures under this course will be removed."
+      )
+    ) removeCourse(course._id)
   }
 
-  useEffect(()=>{
-    if(isSuccess){
-      toast.success(data.message || "Course update")
+  useEffect(()=> {
+    if (removeSuccess) {
+      toast.success(removeData?.message || "Course removed successfully");
+      navigate("/admin/course");
     }
-    if(error){
-      toast.error(error.data?.message || "Course update failed")
+    if (removeError) {
+      toast.error(removeError?.data?.message || "Failed to remove course");
     }
-  },[isSuccess, error])
+  },[removeSuccess, removeError])
 
-  if(courseByIdLoading) return <Loader2 className="h-8 w-8 animate-spin" />;
+  useEffect(() => {
+    if (isSuccess) {
+      toast.success(data.message || "Course update");
+    }
+    if (error) {
+      toast.error(error.data?.message || "Course update failed");
+    }
+  }, [isSuccess, error]);
 
-  const isPublished = true;
+  if (courseByIdLoading) return <Loader2 className="h-8 w-8 animate-spin" />;
+
   return (
     <Card>
       <CardHeader className="flex flex-row justify-between">
@@ -123,10 +167,25 @@ const CourseTab = () => {
           </CardDescription>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline">
-            {isPublished ? "Unpublished" : "Published"}
+          <Button
+          disabled={courseByIdData?.data.lectures.length === 0}
+            variant="outline"
+            onClick={() =>
+              publishStatusHandler(
+                courseByIdData?.data.isPublished ? "false" : "true"
+              )
+            }
+          >
+            {courseByIdData?.data.isPublished ? "Unpublish" : "Publish"}
           </Button>
-          <Button>Remove Course</Button>
+          <Button
+        variant="destructive"
+        size="sm"
+        onClick={removeCourseHandler}
+        disabled={removeLoading}
+      >
+        {removeLoading ? "Deleting…" : "Delete"}
+      </Button>
         </div>
       </CardHeader>
       <CardContent>
@@ -186,7 +245,10 @@ const CourseTab = () => {
             </div>
             <div>
               <Label>Course Level</Label>
-              <Select value={input.courseLevel} onValueChange={selectCourseLevel}>
+              <Select
+                value={input.courseLevel}
+                onValueChange={selectCourseLevel}
+              >
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="Select course Level" />
                 </SelectTrigger>

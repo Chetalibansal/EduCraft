@@ -43,7 +43,7 @@ const CourseTable = () => {
               </TableCell>
               <TableCell>
                 {" "}
-                <Badge>
+                <Badge variant={course?.isPublished ? "published": "draft"}>
                   {course?.isPublished ? "Published" : "Draft"}
                 </Badge>{" "}
               </TableCell>
