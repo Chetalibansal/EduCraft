@@ -114,10 +114,11 @@ export const markAsInComplete = asyncHandler(async (req, res) => {
   if (!courseProgress)
     return res.status(404).json({ message: "Course progress not found" });
 
-  courseProgress.lectureProgress.map(
+  courseProgress.lectureProgress.forEach(
     (lectureProgress) => (lectureProgress.viewed = false)
   );
   courseProgress.completed = false;
+  courseProgress.markModified("lectureProgress");
   await courseProgress.save();
 
   return res.status(200).json({ message: "Course marked as Incomplete" });

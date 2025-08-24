@@ -43,15 +43,18 @@ const CourseProgress = () => {
   const isLectureCompleted = (lectureId) => {
     return progress.some((prog) => prog.lectureId === lectureId && prog.viewed);
   };
-  //Handle select a specific lecture to watch
-  const handleSelectLecture = (lecture) => {
-    setCurrentLecture(lecture);
-  };
 
   const handleLectureProgress = async (lectureId) => {
     await updateLectureProgress({ courseId, lectureId });
     refetch();
   };
+
+  //Handle select a specific lecture to watch
+  const handleSelectLecture = (lecture) => {
+    setCurrentLecture(lecture);
+    handleLectureProgress(lecture._id)
+  };
+
 
   const handleCompleteCourse = async () => {
     await completeCourse(courseId);
@@ -66,11 +69,13 @@ const CourseProgress = () => {
       refetch();
       toast.success(markCompleteData?.message)
     }
+  },[completedSuccess])
+  useEffect(()=>{
     if(inCompleteSuccess) {
       refetch();
       toast.success(markInCompleteData?.message)
     }
-  },[completedSuccess, inCompleteSuccess])
+  },[inCompleteSuccess])
   return (
     <div className="max-w-7xl mx-auto p-4 mt-20">
       <div className="flex justify-between mb-4">
